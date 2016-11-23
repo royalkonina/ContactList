@@ -1,5 +1,6 @@
 package com.example.user.contactlist;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -13,7 +14,7 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 
 public class ContactListActivity extends AppCompatActivity implements OnContactClickListener {
-  private static final int CONTACT_LOADER_ID = 1337;
+  private static final int CONTACT_LIST_LOADER_ID = 1337;
   private ContactsListAdapter adapter;
   private ListView lvContacts;
   private ProgressBar progressBar;
@@ -22,13 +23,14 @@ public class ContactListActivity extends AppCompatActivity implements OnContactC
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.a_contact_list);
-    progressBar = (ProgressBar) findViewById(R.id.progress_bar);
+    progressBar = (ProgressBar) findViewById(R.id.list_progress_bar);
     lvContacts = (ListView) findViewById(R.id.contact_list_view);
 
     setupCursorAdapter();
     lvContacts.setAdapter(adapter);
-    getSupportLoaderManager().initLoader(CONTACT_LOADER_ID,
+    getSupportLoaderManager().initLoader(CONTACT_LIST_LOADER_ID,
             new Bundle(), contactsLoader);
+
   }
 
   private void setupCursorAdapter() {
@@ -38,18 +40,17 @@ public class ContactListActivity extends AppCompatActivity implements OnContactC
             this, R.layout.i_listitem,
             null, uiBindFrom, uiBindTo,
             0);
+    adapter.setOnContactClickListener(this);
   }
 
   private LoaderManager.LoaderCallbacks<Cursor> contactsLoader =
           new LoaderManager.LoaderCallbacks<Cursor>() {
             @Override
             public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-               String[] projectionFields = new String[]{ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME};
+              String[] projectionFields = new String[]{ContactsContract.Contacts._ID, ContactsContract.Contacts.DISPLAY_NAME};
               return new CursorLoader(ContactListActivity.this,
                       ContactsContract.Contacts.CONTENT_URI,
                       projectionFields,
-                      //null,
-                     // SELECTION,
                       null,
                       null,
                       null
@@ -78,9 +79,10 @@ public class ContactListActivity extends AppCompatActivity implements OnContactC
           };
 
   @Override
-  public void onContactClick(int contactId) {
-    lvContacts.setVisibility(View.GONE);
-    progressBar.setVisibility(View.VISIBLE);
-
+  public void onContactClick(final String contactId) {
+    Intent intent = new Intent(ContactListActivity.this, ContactInfoActivity.class);
+    System.err.println("put = " + contactId);
+    intent.putExtra("extraContactID", contactId);
+    startActivity(intent);
   }
 }

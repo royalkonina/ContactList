@@ -7,7 +7,7 @@
     android:orientation="horizontal">
 
     <ProgressBar
-        android:id="@+id/progress_bar"
+        android:id="@+id/list_progress_bar"
         style="@style/Base.Widget.AppCompat.DropDownItem.Spinner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
