@@ -1,21 +1,27 @@
 package com.example.user.contactlist;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
 public class ContactInfoActivity extends AppCompatActivity {
-
+  public static String EXTRA_CONTACT_ID = "extraContactID";
   public static String extraContactID;
   private static final int PHONE_LOADER_ID = 2;
   private static final int EMAIL_LOADER_ID = 3;
@@ -27,7 +33,7 @@ public class ContactInfoActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.a_contact_info);
-    extraContactID = getIntent().getStringExtra("extraContactID");
+    extraContactID = getIntent().getStringExtra(EXTRA_CONTACT_ID);
     progressBar = (ProgressBar) findViewById(R.id.info_progress_bar);
     phonesLayout = (LinearLayout) findViewById(R.id.phones_layout);
     emailsLayout = (LinearLayout) findViewById(R.id.emails_layout);
@@ -39,6 +45,37 @@ public class ContactInfoActivity extends AppCompatActivity {
 
   private LoaderManager.LoaderCallbacks<Cursor> dataLoader =
           new LoaderManager.LoaderCallbacks<Cursor>() {
+            public void setPhoneViewListeners(View phoneView, final String phoneNumber) {
+              ImageButton callButton = (ImageButton) phoneView.findViewById(R.id.call_button);
+              callButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                  Intent callIntent = new Intent(Intent.ACTION_CALL);
+                  callIntent.setData(Uri.parse("tel:" + phoneNumber));
+                  if (ActivityCompat.checkSelfPermission(ContactInfoActivity.this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                  }
+                  startActivity(callIntent);
+                }
+              });
+              ImageButton smsButton = (ImageButton) phoneView.findViewById(R.id.sms_button);
+              smsButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                  Intent smsIntent = new Intent(Intent.ACTION_VIEW, Uri.fromParts("sms", phoneNumber, null));
+                  smsIntent.setData(Uri.parse("tel:" + phoneNumber));
+                  startActivity(smsIntent);
+                }
+              });
+            }
+
             @Override
             public Loader<Cursor> onCreateLoader(int id, Bundle args) {
               CursorLoader cursorLoader = null;
@@ -71,40 +108,67 @@ public class ContactInfoActivity extends AppCompatActivity {
 
             @Override
             public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-              if (cursor == null) {
-                //Some error occurred
-                System.err.println("NULL");
-              } else if (cursor.getCount() < 1) {
-                ImageView noContactsImage = (ImageView) findViewById(R.id.stub_no_contacts);
-                progressBar.setVisibility(View.GONE);
-                System.err.println("EMPTY");
-                // noContactsImage.setVisibility(View.VISIBLE); // TODO: 11/23/2016 make another stub
-              } else {
-                System.err.println("FOUND " + cursor.getCount());
-                while (cursor.moveToNext()) {
-                  String email = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
-                  String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                  if (email != null && email.length() > 0) {
-                    //System.err.println("NOT NULL EMAIL");
-                    TextView emailView = new TextView(ContactInfoActivity.this);
-                    emailView.setText(email);
-                    emailView.setTextSize(16);
-                    emailsLayout.addView(emailView);
-
-
+              switch (loader.getId()) {
+                case PHONE_LOADER_ID:
+                  if (cursor == null) {
+                    Log.d("PhoneNumbersLoading", "NULL");
+                  } else if (cursor.getCount() < 1) {
+                    progressBar.setVisibility(View.GONE);
+                    Log.d("PhoneNumbersLoading", "EMPTY");
+                  } else {
+                    phonesLayout.removeAllViewsInLayout();
+                    while (cursor.moveToNext()) {
+                      final String phone = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                      if (phone != null && phone.length() > 0) {
+                        Log.d("phoneAdded", phone);
+                        View phoneView = getLayoutInflater().inflate(R.layout.i_phone_item, null);
+                        TextView phoneTextView = (TextView) phoneView.findViewById(R.id.phone_number);
+                        setPhoneViewListeners(phoneView, phone);
+                        phoneTextView.setText(phone);
+                        phonesLayout.addView(phoneView);
+                      }
+                    }
+                    progressBar.setVisibility(View.GONE);
+                    phonesLayout.setVisibility(View.VISIBLE);
                   }
-                  if (phone != null && phone.length() > 0) {
-                    //System.err.println("NOT NULL PHONE");
-                    TextView phoneView = new TextView(ContactInfoActivity.this);
-                    phoneView.setText(phone);
-                    phoneView.setTextSize(16);
-                    phonesLayout.addView(phoneView);
+                  break;
+                case EMAIL_LOADER_ID:
+                  emailsLayout.removeAllViewsInLayout();
+                  if (cursor == null) {
+                    Log.d("PhoneNumbersLoading", "NULL");
+                  } else if (cursor.getCount() < 1) {
+                    progressBar.setVisibility(View.GONE);
+                    Log.d("PhoneNumbersLoading", "EMPTY");
+                  } else {
+                    while (cursor.moveToNext()) {
+                      String email = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS));
+                      if (email != null && email.length() > 0) {
+                        Log.d("emailAdded", email);
+                        View emailView = getLayoutInflater().inflate(R.layout.i_email_item, null);
+                        TextView emailTextView = (TextView) emailView.findViewById(R.id.email);
+                        setEmailViewListeners(emailView, email);
+                        emailTextView.setText(email);
+                        emailsLayout.addView(emailView);
+                      }
+                    }
+                    progressBar.setVisibility(View.GONE);
+                    emailsLayout.setVisibility(View.VISIBLE);
                   }
-                }
-                progressBar.setVisibility(View.GONE);
-                phonesLayout.setVisibility(View.VISIBLE);
-                emailsLayout.setVisibility(View.VISIBLE);
+                  break;
               }
+            }
+
+            private void setEmailViewListeners(View emailView, final String emailAddress) {
+              ImageButton emailButton = (ImageButton) emailView.findViewById(R.id.email_button);
+              emailButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                  Intent intent = new Intent(Intent.ACTION_SEND);
+                  intent.setType("message/rfc822");
+                  intent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddress});
+                  startActivity(Intent.createChooser(intent, "Send Email"));
+                }
+              });
             }
 
             @Override

@@ -4,6 +4,7 @@
               android:layout_height="match_parent"
               android:background="@drawable/s_background"
               android:orientation="vertical"
+              android:padding="8dp"
               >
 
     <TextView

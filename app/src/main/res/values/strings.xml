@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">ContactList</string>
     <string name="phones">Phones:</string>
+    <string name="emails">Emails:</string>
 </resources>

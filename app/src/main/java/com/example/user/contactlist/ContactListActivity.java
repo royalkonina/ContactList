@@ -81,8 +81,7 @@ public class ContactListActivity extends AppCompatActivity implements OnContactC
   @Override
   public void onContactClick(final String contactId) {
     Intent intent = new Intent(ContactListActivity.this, ContactInfoActivity.class);
-    System.err.println("put = " + contactId);
-    intent.putExtra("extraContactID", contactId);
+    intent.putExtra(ContactInfoActivity.EXTRA_CONTACT_ID, contactId);
     startActivity(intent);
   }
 }

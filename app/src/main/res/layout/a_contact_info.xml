@@ -4,15 +4,14 @@
     android:id="@+id/a_contact_info"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:orientation="vertical">
 
     <ProgressBar
         android:id="@+id/info_progress_bar"
         style="@style/Base.Widget.AppCompat.DropDownItem.Spinner"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_weight="1"
         android:visibility="visible">
     </ProgressBar>
 
@@ -22,14 +21,6 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="gone">
-
-        <TextView
-            android:id="@+id/phones_label"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/phones"
-            android:textSize="24sp"
-            />
     </LinearLayout>
 
     <LinearLayout
